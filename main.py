@@ -142,8 +142,8 @@ def install_hfdownloader() -> bool:
             subprocess.run([shell, "-NoLogo", "-NoProfile", "-Command", script_cmd], check=True)
         else:
             print("[INFO] 使用 bash 自动安装 hfdownloader …")
-            # The install script installs to /usr/local/bin or ~/.local/bin by default with -i
-            subprocess.run(["bash", "-c", "bash <(curl -sSL https://g.bodaay.io/hfd) -i"], check=True)
+            # 使用管道替代进程替换，兼容更多 shell 环境
+            subprocess.run(["bash", "-c", "curl -sSL https://g.bodaay.io/hfd | bash -s -- -i"], check=True)
     except FileNotFoundError:
         print("[ERROR] 自动安装所需环境缺失（bash/curl 或 PowerShell）。")
         return False
