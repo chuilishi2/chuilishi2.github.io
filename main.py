@@ -121,9 +121,15 @@ def parse_args():
     # If user requested help, show combined help
     if known.help:
         parser.print_help()
-        print("\n--- hfdownloader help below ---\n")
+        print("\n--- hfdownloader help below ---\n", flush=True)
         subprocess.run(["hfdownloader", "--help"])
         sys.exit(0)
+
+    # 如果未提供任何 hfdownloader 参数，直接显示帮助后退出
+    if not remaining:
+        print("[WARN] 未检测到 hfdownloader 参数，显示帮助后退出。", flush=True)
+        subprocess.run(["hfdownloader", "--help"])
+        sys.exit(1)
 
     return known, remaining
 
