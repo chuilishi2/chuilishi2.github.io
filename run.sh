@@ -79,18 +79,28 @@ for ((i=0;i<${#HF_ARGS[@]};i++)); do
   esac
 done
 
-# 将 "/" 替换为 "_"，并去掉过滤器 ":filter" 部分
-FOLDER=""
-if [[ -n $MODEL_DATASET ]]; then
-  FOLDER="${MODEL_DATASET%%:*}"
-  FOLDER="${FOLDER//\//_}"
+# 若未指定模型或数据集，则直接退出（用于 -h 等场景）
+if [[ -z $MODEL_DATASET ]]; then
+  echo "[INFO] 未检测到 -m/--model 或 -d/--dataset 参数，跳过上传操作" >&2
+  exit 0
 fi
+
+# 将 "/" 替换为 "_"，并去掉过滤器 ":filter" 部分
+FOLDER="${MODEL_DATASET%%:*}"
+FOLDER="${FOLDER//\//_}"
 
 if [[ -n $STORAGE ]]; then
   TARGET="${STORAGE%/}"
   [[ -n $FOLDER ]] && TARGET="$TARGET/$FOLDER"
 else
   TARGET="${FOLDER:-.}"
+fi
+
+# ----------- 校验目标是否存在 -----------
+if [[ ! -e $TARGET ]]; then
+  echo "[ERROR] 未找到下载生成的目录 $TARGET" >&2
+  echo "[HINT] 请确认 hfdownloader 参数是否包含 -m/--model 或 -d/--dataset，且下载已成功完成" >&2
+  exit 2
 fi
 
 # ----------- 上传 -------------------
