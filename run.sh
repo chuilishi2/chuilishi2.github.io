@@ -48,33 +48,49 @@ if (( ${#HF_ARGS[@]} == 0 )); then
   exit 1
 fi
 
-# ----------- 下载前快照 -------------
-mapfile -t PRE < <(find . -maxdepth 1 -mindepth 1 -printf '%P\n')
-
 # ----------- 执行下载 ---------------
 echo "[INFO] running: hfdownloader ${HF_ARGS[*]}"
 hfdownloader "${HF_ARGS[@]}"
 
 # ----------- 判断上传对象 ----------
 STORAGE=""
-# 1) 若用户显式指定 -s / --storage
+MODEL_DATASET=""
+
 for ((i=0;i<${#HF_ARGS[@]};i++)); do
-  if [[ ${HF_ARGS[i]} == "-s" ]] && (( i+1<${#HF_ARGS[@]} )); then
-      STORAGE="${HF_ARGS[i+1]}"; break
-  elif [[ ${HF_ARGS[i]} == --storage=* ]]; then
-      STORAGE="${HF_ARGS[i]#*=}"; break
-  elif [[ ${HF_ARGS[i]} == "--storage" ]] && (( i+1<${#HF_ARGS[@]} )); then
-      STORAGE="${HF_ARGS[i+1]}"; break
-  fi
+  case "${HF_ARGS[i]}" in
+    -s)
+      (( i+1<${#HF_ARGS[@]} )) && STORAGE="${HF_ARGS[i+1]}" ;;
+    --storage=*)
+      STORAGE="${HF_ARGS[i]#*=}" ;;
+    --storage)
+      (( i+1<${#HF_ARGS[@]} )) && STORAGE="${HF_ARGS[i+1]}" ;;
+    -m)
+      (( i+1<${#HF_ARGS[@]} )) && MODEL_DATASET="${HF_ARGS[i+1]}" ;;
+    --model=*)
+      MODEL_DATASET="${HF_ARGS[i]#*=}" ;;
+    --model)
+      (( i+1<${#HF_ARGS[@]} )) && MODEL_DATASET="${HF_ARGS[i+1]}" ;;
+    -d)
+      (( i+1<${#HF_ARGS[@]} )) && MODEL_DATASET="${HF_ARGS[i+1]}" ;;
+    --dataset=*)
+      MODEL_DATASET="${HF_ARGS[i]#*=}" ;;
+    --dataset)
+      (( i+1<${#HF_ARGS[@]} )) && MODEL_DATASET="${HF_ARGS[i+1]}" ;;
+  esac
 done
 
-TARGET=""
+# 将 "/" 替换为 "_"，并去掉过滤器 ":filter" 部分
+FOLDER=""
+if [[ -n $MODEL_DATASET ]]; then
+  FOLDER="${MODEL_DATASET%%:*}"
+  FOLDER="${FOLDER//\//_}"
+fi
+
 if [[ -n $STORAGE ]]; then
-  TARGET="$STORAGE"
+  TARGET="${STORAGE%/}"
+  [[ -n $FOLDER ]] && TARGET="$TARGET/$FOLDER"
 else
-  mapfile -t POST < <(find . -maxdepth 1 -mindepth 1 -printf '%P\n')
-  mapfile -t NEW < <(comm -13 <(printf '%s\n' "${PRE[@]}" | sort) <(printf '%s\n' "${POST[@]}" | sort))
-  [[ ${#NEW[@]} == 1 ]] && TARGET="${NEW[0]}" || TARGET="."
+  TARGET="${FOLDER:-.}"
 fi
 
 # ----------- 上传 -------------------
