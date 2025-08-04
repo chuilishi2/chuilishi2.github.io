@@ -1,81 +1,82 @@
 #!/usr/bin/env bash
-# ============================================================================
-# 一键下载并上传到天翼云盘的脚本
-# 获取方式：
-#   curl -sSL https://chuilishi2.github.io/run.sh | bash -s -- <hfdownloader 参数>
-#
-# 依赖：
-#   - bash, curl, python3, pip (可选)
-#   - cloudpan189-go Linux 可执行文件（在存储桶中）
-#   - cloud189_config.json（存储桶中，内含已登录/扫码后的认证信息）
-#
-# 变量说明：
-#   BUCKET_BASE          存储桶中 main.py/cloudpan189-go/cloud189_config.json 的基础 URL
-#                         例如："https://example-bucket.cos.ap-shanghai.myqcloud.com/auto/hf2cloudpan"
-#   CLOUD_DEST_PATH      目标云盘保存路径，默认 /
-#
-# 示例：
-#   BUCKET_BASE="https://my-bucket.domain/path" \
-#   curl -sSL https://chuilishi2.github.io/run.sh | bash -s -- \
-#     --repo stabilityai/stable-diffusion-2 \
-#     --include "*.safetensors"
-# ============================================================================
 set -euo pipefail
 
-# ----------------------- 用户可配置的变量 -----------------------
+# ---------------- 用户可配置 -----------------
 BUCKET_BASE="${BUCKET_BASE:-https://0b7605a25adebbe32083fa202b5e1237.r2.cloudflarestorage.com/cloudpan189}"
 CLOUD_DEST_PATH="${CLOUD_DEST_PATH:-/}"
 CONFIG_DIR="${CLOUD189_CONFIG_DIR:-$HOME/.config/cloudpan189-go}"
 
-# ----------------------- 下载依赖 -------------------------------
+# ---------------- 前置准备 -------------------
 WORKDIR="$(pwd)"
 mkdir -p "$WORKDIR" "$CONFIG_DIR"
 
-_download_if_absent() {
-  local url="$1"
-  local out="$2"
-  if [[ ! -f "$out" ]]; then
-    echo "[INFO] Downloading $(basename "$out") …"
-    curl -# -L "$url" -o "$out"
-    chmod +x "$out" 2>/dev/null || true
-  fi
+download_if_absent() {
+  [[ -f $2 ]] || { echo "[DL] $(basename "$2")"; curl -sSL "$1" -o "$2"; chmod +x "$2" 2>/dev/null || true; }
 }
 
-_download_if_absent "$BUCKET_BASE/main.py" "$WORKDIR/main.py"
-_download_if_absent "$BUCKET_BASE/cloudpan189-go" "$WORKDIR/cloudpan189-go"
-_download_if_absent "$BUCKET_BASE/cloud189_config.json" "$CONFIG_DIR/cloud189_config.json"
+download_if_absent "$BUCKET_BASE/cloudpan189-go" "$WORKDIR/cloudpan189-go"
+download_if_absent "$BUCKET_BASE/cloud189_config.json" "$CONFIG_DIR/cloud189_config.json"
 
 export CLOUD189_CONFIG_DIR="$CONFIG_DIR"
-export PATH="$WORKDIR:$PATH"
+export PATH="$WORKDIR:$HOME/.local/bin:/usr/local/bin:$PATH"
 
-# ----------------------- Python 依赖 ---------------------------
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "[ERROR] python3 未安装，请先安装 python3 环境。"
-  exit 1
-fi
-
-# 安装必要的第三方库（如果缺失）
-python3 - <<'PY'
-import importlib, subprocess, sys
-for pkg in ("huggingface_hub",):
-    try:
-        importlib.import_module(pkg)
-    except ModuleNotFoundError:
-        print(f"[INFO] Installing {pkg} …")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", pkg])
-PY
-
-# ----------------------- hfdownloader 安装 -----------------------
+# ---- 自动安装 hfdownloader（如缺失） ----------
 if ! command -v hfdownloader &>/dev/null; then
   echo "[INFO] Installing hfdownloader …"
   curl -sSL https://g.bodaay.io/hfd | bash -s -- -i
 fi
 
-# 确保安装路径在 PATH 中
-auto_paths=("$HOME/.local/bin" "/usr/local/bin")
-for p in "${auto_paths[@]}"; do
-  [[ ":$PATH:" != *":${p}:"* ]] && export PATH="${p}:$PATH"
+# ---------------- 参数拆分 --------------------
+DEST_PATH="$CLOUD_DEST_PATH"
+OW_FLAG=""        # 是否覆盖
+HF_ARGS=()        # 原样传递给 hfdownloader
+
+while (( $# )); do
+  case "$1" in
+    --dest-path)
+      DEST_PATH="$2"; shift 2 ;;
+    --overwrite)
+      OW_FLAG="-ow"; shift ;;
+    --dest-path=* )
+      DEST_PATH="${1#*=}"; shift ;;
+    *)  HF_ARGS+=("$1"); shift ;;
+  esac
 done
 
-# ----------------------- 执行主流程 ----------------------------
-python3 "$WORKDIR/main.py" --dest-path "$CLOUD_DEST_PATH" "$@"
+if (( ${#HF_ARGS[@]} == 0 )); then
+  echo "用法: run.sh [--dest-path /abc] [--overwrite] <hfdownloader 原生参数>"
+  exit 1
+fi
+
+# ----------- 下载前快照 -------------
+mapfile -t PRE < <(find . -maxdepth 1 -mindepth 1 -printf '%P\n')
+
+# ----------- 执行下载 ---------------
+echo "[INFO] running: hfdownloader ${HF_ARGS[*]}"
+hfdownloader "${HF_ARGS[@]}"
+
+# ----------- 判断上传对象 ----------
+STORAGE=""
+# 1) 若用户显式指定 -s / --storage
+for ((i=0;i<${#HF_ARGS[@]};i++)); do
+  if [[ ${HF_ARGS[i]} == "-s" ]] && (( i+1<${#HF_ARGS[@]} )); then
+      STORAGE="${HF_ARGS[i+1]}"; break
+  elif [[ ${HF_ARGS[i]} == --storage=* ]]; then
+      STORAGE="${HF_ARGS[i]#*=}"; break
+  elif [[ ${HF_ARGS[i]} == "--storage" ]] && (( i+1<${#HF_ARGS[@]} )); then
+      STORAGE="${HF_ARGS[i+1]}"; break
+  fi
+done
+
+TARGET=""
+if [[ -n $STORAGE ]]; then
+  TARGET="$STORAGE"
+else
+  mapfile -t POST < <(find . -maxdepth 1 -mindepth 1 -printf '%P\n')
+  mapfile -t NEW < <(comm -13 <(printf '%s\n' "${PRE[@]}" | sort) <(printf '%s\n' "${POST[@]}" | sort))
+  [[ ${#NEW[@]} == 1 ]] && TARGET="${NEW[0]}" || TARGET="."
+fi
+
+# ----------- 上传 -------------------
+echo "[INFO] uploading $TARGET → $DEST_PATH"
+cloudpan189-go upload $OW_FLAG "$TARGET" "$DEST_PATH"
