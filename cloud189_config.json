@@ -1,0 +1,19 @@
+{
+ "configVer": "1.0",
+ "activeUID": 0,
+ "userList": null,
+ "cacheSize": 0,
+ "maxDownloadParallel": 0,
+ "maxUploadParallel": 0,
+ "maxDownloadRate": 0,
+ "maxUploadRate": 0,
+ "saveDir": "E:\\Desktop\\cloudpan189-go\\Downloads",
+ "proxy": "",
+ "localAddrs": "",
+ "preferIPType": "ipv4",
+ "updateCheckInfo": {
+  "preferUpdateSrv": "",
+  "latestVer": "v0.1.3",
+  "checkTime": 1754298059
+ }
+}
