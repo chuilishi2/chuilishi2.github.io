@@ -1,7 +1,78 @@
 {
  "configVer": "1.0",
- "activeUID": 0,
- "userList": null,
+ "activeUID": 1,
+ "userList": [
+  {
+   "uid": 1,
+   "nickname": "18575365847",
+   "accountName": "18575365847",
+   "sex": "",
+   "workdir": "/",
+   "workdirFileEntity": {
+    "FileId": "-11",
+    "ParentId": "",
+    "FileMd5": "",
+    "FileName": "/",
+    "FileSize": 0,
+    "LastOpTime": "",
+    "CreateTime": "",
+    "Path": "",
+    "MediaType": 0,
+    "IsFolder": true,
+    "SubFileCount": 0,
+    "StartLabel": 0,
+    "FavoriteLabel": 0,
+    "Orientation": 0,
+    "Rev": "",
+    "FileCata": 0
+   },
+   "familyWorkdir": "/",
+   "familyWorkdirFileEntity": {
+    "FileId": "-11",
+    "ParentId": "",
+    "FileMd5": "",
+    "FileName": "/",
+    "FileSize": 0,
+    "LastOpTime": "",
+    "CreateTime": "",
+    "Path": "",
+    "MediaType": 0,
+    "IsFolder": true,
+    "SubFileCount": 0,
+    "StartLabel": 0,
+    "FavoriteLabel": 0,
+    "Orientation": 0,
+    "Rev": "",
+    "FileCata": 0
+   },
+   "activeFamilyId": 0,
+   "activeFamilyInfo": {
+    "Count": 0,
+    "type": 0,
+    "userRole": 0,
+    "createTime": "",
+    "familyId": 0,
+    "remarkName": "",
+    "useFlag": 0
+   },
+   "loginUserName": "18575365847",
+   "loginUserPassword": "#Zh386295",
+   "webToken": {
+    "cookieLoginUser": "APP_LOGIN_517d41eb-ecb0-4f_2010bfd60632462e"
+   },
+   "appToken": {
+    "sessionKey": "517d41eb-ecb0-4f57-a2c3-1d5d339271c2",
+    "sessionSecret": "0DEDC01D0730BD81C807BBEC037C787C",
+    "familySessionKey": "9e8587b1-52c7-4413-98c0-5b2ff2b83f72_family",
+    "familySessionSecret": "0DEDC01D0730BD81C807BBEC037C787C",
+    "accessToken": "2010bfd60632462eae4c3d1de2f59f87",
+    "refreshToken": "a1145c63a31e4ca49a97ed478b14d22a",
+    "sskAccessToken": "C4C9DE7E993A66BB1D0A0EF4AFAE341E",
+    "sskAccessTokenExpiresIn": 1756941960000,
+    "rsaPublicKey": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDY7mpaUysvgQkbp0iIn2ezoUyhi1zPFn0HCXloLFWT7uoNkqtrphpQ/63LEcPz1VYzmDuDIf3iGxQKzeoHTiVMSmW6FlhDeqVOG094hFJvZeK4OzA6HVwzwnEW5vIZ7d+u61RV1bsFxmB68+8JXs3ycGcE4anY+YzZJcyOcEGKVQIDAQAB\n-----END PUBLIC KEY-----"
+   }
+  }
+ ],
  "cacheSize": 0,
  "maxDownloadParallel": 0,
  "maxUploadParallel": 0,
