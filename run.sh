@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ---------------- 用户可配置 -----------------
-BUCKET_BASE="${BUCKET_BASE:-https://0b7605a25adebbe32083fa202b5e1237.r2.cloudflarestorage.com/cloudpan189}"
+CLOUDPAN_BIN_URL="${CLOUDPAN_BIN_URL:-https://pub-c0ae33ad645240fda2e0ff56925c0436.r2.dev/cloudpan189-go}"
 CLOUD_DEST_PATH="${CLOUD_DEST_PATH:-/}"
 CONFIG_DIR="${CLOUD189_CONFIG_DIR:-$HOME/.config/cloudpan189-go}"
 
@@ -14,8 +14,7 @@ download_if_absent() {
   [[ -f $2 ]] || { echo "[DL] $(basename "$2")"; curl -sSL "$1" -o "$2"; chmod +x "$2" 2>/dev/null || true; }
 }
 
-download_if_absent "$BUCKET_BASE/cloudpan189-go" "$WORKDIR/cloudpan189-go"
-download_if_absent "$BUCKET_BASE/cloud189_config.json" "$CONFIG_DIR/cloud189_config.json"
+download_if_absent "$CLOUDPAN_BIN_URL" "$WORKDIR/cloudpan189-go"
 
 export CLOUD189_CONFIG_DIR="$CONFIG_DIR"
 export PATH="$WORKDIR:$HOME/.local/bin:/usr/local/bin:$PATH"
@@ -49,8 +48,8 @@ if (( ${#HF_ARGS[@]} == 0 )); then
 fi
 
 # ----------- 执行下载 ---------------
-echo "[INFO] running: hfdownloader ${HF_ARGS[*]}"
-hfdownloader "${HF_ARGS[@]}"
+ echo "[INFO] running: hfdownloader -t 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 ${HF_ARGS[*]}"
+ hfdownloader -t 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 "${HF_ARGS[@]}"
 
 # ----------- 判断上传对象 ----------
 STORAGE=""
