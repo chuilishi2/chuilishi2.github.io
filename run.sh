@@ -17,6 +17,7 @@ download_if_absent() {
 download_if_absent "$CLOUDPAN_BIN_URL" "$WORKDIR/cloudpan189-go"
 
 export CLOUD189_CONFIG_DIR="$CONFIG_DIR"
+export HF_TOKEN="${HF_TOKEN:-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}"
 export PATH="$WORKDIR:$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # ---- 自动安装 hfdownloader（如缺失） ----------
@@ -48,8 +49,8 @@ if (( ${#HF_ARGS[@]} == 0 )); then
 fi
 
 # ----------- 执行下载 ---------------
- echo "[INFO] running: hfdownloader -t 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 ${HF_ARGS[*]}"
- hfdownloader -t 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 "${HF_ARGS[@]}"
+echo "[INFO] running: hfdownloader ${HF_ARGS[*]}"
+hfdownloader "${HF_ARGS[@]}"
 
 # ----------- 判断上传对象 ----------
 STORAGE=""
